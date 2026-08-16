@@ -1,7 +1,11 @@
 import LoginPage from "@/components/form/LoginPage";
 
-function page() {
-  return <div><LoginPage/></div>;
+function Login() {
+  return (
+    <div>
+      <LoginPage />
+    </div>
+  );
 }
 
-export default page;
+export default Login;
