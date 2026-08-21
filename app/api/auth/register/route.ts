@@ -1,31 +1,55 @@
-import mongoose, { Schema } from "mongoose";
+import { NextResponse } from "next/server";
+import bcrypt from "bcrypt";
+import { connectDB } from "@/lib/mongodb";
+import User from "@/models/User";
 
-const userSchema = new Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+export async function POST(request: Request) {
+  try {
+    const { name, email, password } = await request.json();
 
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-    },
+    if (!name || !email || !password) {
+      return NextResponse.json(
+        { message: "All fields are required" },
+        { status: 400 },
+      );
+    }
 
-    password: {
-      type: String,
-      required: true,
-    },
-  },
-  {
-    timestamps: true,
-  },
-);
+    await connectDB();
 
-const User = mongoose.models.User || mongoose.model("User", userSchema);
+    const existingUser = await User.findOne({ email });
 
-export default User;
+    if (existingUser) {
+      return NextResponse.json(
+        { message: "User already exists" },
+        { status: 409 },
+      );
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+    });
+
+    return NextResponse.json(
+      {
+        message: "User created successfully",
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+        },
+      },
+      { status: 201 },
+    );
+  } catch (error) {
+    console.error("REGISTER ERROR:", error);
+
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
