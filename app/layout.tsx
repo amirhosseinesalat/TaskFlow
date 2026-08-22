@@ -1,5 +1,5 @@
 import AuthSessionProvider from "@/components/SessionProvider";
-
+import "./globals.css";
 export default function RootLayout({
   children,
 }: Readonly<{
